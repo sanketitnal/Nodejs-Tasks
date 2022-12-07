@@ -21,7 +21,7 @@ cacheDB = {
 			delete cache["key"];
 		}
 	},
-	isTokenPresent: (key) => {
+	isKeyPresent: (key) => {
 		return key in cache;
 	},
 };
