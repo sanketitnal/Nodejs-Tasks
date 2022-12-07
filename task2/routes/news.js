@@ -1,9 +1,10 @@
 var express = require("express");
 var router = express.Router();
 const NewsAPI = require("newsapi");
-
+const cachedHttpResult = require("../utils/cached-http-result");
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const newsapi = new NewsAPI(NEWS_API_KEY);
+const cache = require("../cache/cache");
 
 /**
  * @swagger
@@ -108,26 +109,32 @@ const newsapi = new NewsAPI(NEWS_API_KEY);
  *              $ref: '#/components/schemas/standardresponse'
  */
 
-router.get("/", function (req, res, next) {
-	let search = req.query.search;
-	let options = {
-		language: "en",
-	};
+router.get(
+	"/",
+	genNewsCacheSearchKey,
+	cachedHttpResult,
+	function (req, res, next) {
+		let search = req.query.search;
+		let options = {
+			language: "en",
+		};
 
-	if (search) {
-		options.q = search;
+		if (search) {
+			options.q = search;
+		}
+
+		newsapi.v2
+			.topHeadlines(options)
+			.then((response) => {
+				let transfData = transfNewsData(response);
+				res.send(transfData);
+				cache.addKV(`news_${search ? search : ""}`, transfData);
+			})
+			.catch(function (error) {
+				next(error);
+			});
 	}
-
-	newsapi.v2
-		.topHeadlines(options)
-		.then((response) => {
-			let transfData = transfNewsData(response);
-			res.send(transfData);
-		})
-		.catch(function (error) {
-			next(error);
-		});
-});
+);
 
 function transfNewsData(data) {
 	let newData = {
@@ -141,6 +148,13 @@ function transfNewsData(data) {
 		});
 	}
 	return newData;
+}
+
+function genNewsCacheSearchKey(req, res, next) {
+	let search = req.query.search;
+	let cacheSearchKey = `news_${search ? search : ""}`;
+	req.cacheSearchKey = cacheSearchKey;
+	next();
 }
 
 module.exports = router;

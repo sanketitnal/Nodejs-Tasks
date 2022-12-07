@@ -1,6 +1,8 @@
 var express = require("express");
 var router = express.Router();
 const axios = require("axios");
+const cachedHttpResult = require("../utils/cached-http-result");
+const cache = require("../cache/cache");
 
 const WEATHER_API_URL = "http://api.openweathermap.org/data/2.5/forecast";
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
@@ -38,35 +40,41 @@ const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
  *            schema:
  *              $ref: '#/components/schemas/standardresponse'
  */
-router.get("/", function (req, res, next) {
-	// Default city = Delhi
-	let city = req.query.city || "Delhi";
+router.get(
+	"/",
+	genWeatherCacheSearchKey,
+	cachedHttpResult,
+	function (req, res, next) {
+		// Default city = Delhi
+		let city = req.query.city || "Delhi";
 
-	axios
-		.get(WEATHER_API_URL, {
-			method: "get",
-			params: {
-				q: city,
-				appid: WEATHER_API_KEY,
-				units: "metric",
-			},
-		})
-		.then(function (response) {
-			let resData = transWeathData(response.data);
-			res.send(resData);
-		})
-		.catch(function (error) {
-			// console.log(error);
-			if (error.response) {
-				res.status(error.response.status || 500).json({
-					status: error.response.status || 500,
-					message: error.response.data && error.response.data.message,
-				});
-				return;
-			}
-			next(error);
-		});
-});
+		axios
+			.get(WEATHER_API_URL, {
+				method: "get",
+				params: {
+					q: city,
+					appid: WEATHER_API_KEY,
+					units: "metric",
+				},
+			})
+			.then(function (response) {
+				let resData = transWeathData(response.data);
+				res.send(resData);
+				cache.addKV(`weather_${city ? city : "Delhi"}`, resData);
+			})
+			.catch(function (error) {
+				// console.log(error);
+				if (error.response) {
+					res.status(error.response.status || 500).json({
+						status: error.response.status || 500,
+						message: error.response.data && error.response.data.message,
+					});
+					return;
+				}
+				next(error);
+			});
+	}
+);
 
 //  transform weather data
 function transWeathData(data) {
@@ -86,6 +94,13 @@ function transWeathData(data) {
 		});
 	}
 	return newData;
+}
+
+function genWeatherCacheSearchKey(req, res, next) {
+	let city = req.query.city;
+	let cacheSearchKey = `weather_${city ? city : "Delhi"}`;
+	req.cacheSearchKey = cacheSearchKey;
+	next();
 }
 
 module.exports = router;
