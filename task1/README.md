@@ -11,6 +11,7 @@ Possible solution:
 - https://techdose.co.in/how-to-sort-a-very-large-file-external-sorting-technique/
 - https://leetcode.com/problems/merge-k-sorted-lists/
 
+```
 // Pseudo Code
 function SortLargeFile(inputPath, outputPath) {
 	try {
@@ -83,3 +84,4 @@ function mergeKSortedFiles(smallFilePaths, outputPath) {
 	}
 	outputFile.close();
 }
+```
