@@ -4,7 +4,7 @@
 - [x] Weather API
 - [x] News API
 - [x] Adding Signin, Signup, Signout functionality. Temporary User DB
-- [x] Making News API protected route (requires logging in for authentication)
+- [x] Making News API protected route (requires logging in for accessing)
 - [x] Swagger documentation
 - [x] Test cases
 - [x] Caching functionality. Temporary Cache DB
