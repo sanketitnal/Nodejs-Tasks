@@ -8,8 +8,7 @@
 - [x] Swagger documentation
 - [x] Test cases
 - [x] Caching functionality. Temporary Cache DB
-- [ ] Add request cookie functionality in swagger for /news api testing
-- [ ] Use Redis (currently using object)
+- [ ] Use Redis, apply TTL for cached results (currently using object)
 - [ ] Use SQL database (currently using object)
 - [ ] ...
 
